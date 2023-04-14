@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const JSONPAGESIZE = 500
+
 // APIRequest makes an API request to the specified URL using the specified HTTP method and authentication header.
 // It returns a models.ResponseBody struct containing the API response body and an error (if any).
 func APIRequest(url, method string, auth string, request models.ReadCsv) (models.ResponseBody, error) {
@@ -21,7 +23,7 @@ func APIRequest(url, method string, auth string, request models.ReadCsv) (models
 	req := models.BodyRequest{
 		Document: request.Document,
 		Pages: models.Pagination{
-			Size:   1,
+			Size:   JSONPAGESIZE,
 			Cursor: "",
 		},
 	}
