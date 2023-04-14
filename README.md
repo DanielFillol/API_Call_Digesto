@@ -6,16 +6,19 @@ Simple example script for calling [Digesto API](https://blog.digesto.com.br/api-
 - Deals with JSON pagination
 - JSON returns as .csv
 
-## How to run
+## Setup
 - You must have a .csv file with a single collumn containg all parameters for requesting the API
 - You must save it as ```requests.csv``` on ```data``` folder
 - The returnded file will be save on the same ```data``` folder with the name: ```response.csv```
 - Create a .env file with your authorization token naming it "AUTH"
 ```bash
 AUTH = myApiKey
+```
 
 # Run
+```GO
 - go run main.go
+```
 
 ## Note
 Although this Caller is pre-set to a specific API, you just have to change:
