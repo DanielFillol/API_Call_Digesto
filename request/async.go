@@ -2,42 +2,58 @@ package request
 
 import (
 	"CallDigesto/models"
-	"fmt"
+	"log"
 	"sync"
 )
 
+// AsyncAPIRequest makes API requests asynchronously
 func AsyncAPIRequest(users []models.ReadCsv, numberOfWorkers int, url string, method string, auth string) ([]models.ResponseBody, error) {
+	// Create a channel to signal when the goroutines are done processing inputs
 	done := make(chan struct{})
 	defer close(done)
-
+	// Create a channel to receive inputs from
 	inputCh := StreamInputs(done, users)
 
+	// Create a wait group to wait for the worker goroutines to finish
 	var wg sync.WaitGroup
 	wg.Add(numberOfWorkers)
 
+	// Create a channel to receive results from
 	resultCh := make(chan models.ResponseBody)
 
+	// Spawn worker goroutines to process inputs
+	var errorOnApiRequests error
 	for i := 0; i < numberOfWorkers; i++ {
-		// spawn N worker goroutines, each is consuming a shared input channel.
 		go func() {
+			// Each worker goroutine consumes inputs from the shared input channel
 			for input := range inputCh {
+				// Make the API request and send the response to the result channel
 				bodyStr, err := APIRequest(url, method, auth, input)
 				resultCh <- bodyStr
 				if err != nil {
-					fmt.Println(err)
+					// If there is an error making the API request, print the error
+					log.Println(err)
+					errorOnApiRequests = err
+					break
 				}
 			}
+			// When the worker goroutine is done processing inputs, signal the wait group
 			wg.Done()
-
 		}()
 	}
 
-	// Wait all worker goroutines to finish. Happens if there's no error (no early return)
+	// Wait for all worker goroutines to finish processing inputs
 	go func() {
 		wg.Wait()
 		close(resultCh)
 	}()
 
+	// Return early on error in any given call on API requests
+	if errorOnApiRequests != nil {
+		return nil, errorOnApiRequests
+	}
+
+	// Collect results from the result channel and return them as a slice
 	var results []models.ResponseBody
 	for result := range resultCh {
 		results = append(results, result)
@@ -46,7 +62,9 @@ func AsyncAPIRequest(users []models.ReadCsv, numberOfWorkers int, url string, me
 	return results, nil
 }
 
+// StreamInputs sends inputs from a slice to a channel
 func StreamInputs(done <-chan struct{}, inputs []models.ReadCsv) <-chan models.ReadCsv {
+	// Create a channel to send inputs to
 	inputCh := make(chan models.ReadCsv)
 	go func() {
 		defer close(inputCh)
@@ -54,8 +72,7 @@ func StreamInputs(done <-chan struct{}, inputs []models.ReadCsv) <-chan models.R
 			select {
 			case inputCh <- input:
 			case <-done:
-				// in case done is closed prematurely (because error midway),
-				// finish the loop (closing input channel)
+				// If the done channel is closed prematurely, finish the loop (closing the input channel)
 				break
 			}
 		}

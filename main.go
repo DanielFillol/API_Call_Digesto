@@ -3,45 +3,57 @@ package main
 import (
 	"CallDigesto/csv"
 	"CallDigesto/request"
-	"fmt"
 	"github.com/joho/godotenv"
+	"log"
 	"os"
 	"time"
 )
 
-const LINK = "https://op.digesto.com.br/api/background_check/advanced_search_all?api_key="
-const METHOD = "POST"
-const WORKERS = 1
+const (
+	LINK    = "https://op.digesto.com.br/api/background_check/advanced_search_all?api_key="
+	METHOD  = "POST"
+	WORKERS = 2
+)
+
+const (
+	FILEPATH      = "data/requests.csv"
+	FILESEPARATOR = ','
+	SKIPHEADER    = true
+)
+
+const (
+	FILENAME = "response"
+	FOLDER   = "data"
+)
 
 func main() {
-	//load .env file
+	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Println(".env file was not found. You should add a .env file on project root with:\nAUTH")
+		log.Fatal("Error loading .env file: ", err)
 	}
-
-	//get .env variables
+	// Get the value of the AUTH variable from the environment
 	var auth = os.Getenv("AUTH")
 
-	//load data to be requested
-	requests, err := csv.Read("data/requests.csv", ',')
+	// Load data to be requested from CSV file
+	requests, err := csv.Read(FILEPATH, FILESEPARATOR, SKIPHEADER)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal("Error loading requests from CSV: ", err)
 	}
 
-	//requests
-	url := LINK + auth
+	// Make API requests asynchronously
 	start := time.Now()
+	log.Println("Starting API calls...")
+	url := LINK + auth
 	results, err := request.AsyncAPIRequest(requests, WORKERS, url, METHOD, auth)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal("Error making API requests: ", err)
 	}
-	fmt.Println("finished in ", time.Since(start))
+	log.Println("Finished API calls in ", time.Since(start))
 
-	//download API response to files
-	err = csv.Write("result", "data", results)
+	// Write API response to CSV file
+	err = csv.Write(FILENAME, FOLDER, results)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal("Error writing API response to CSV: ", err)
 	}
-
 }

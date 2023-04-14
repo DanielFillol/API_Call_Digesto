@@ -3,31 +3,42 @@ package csv
 import (
 	"CallDigesto/models"
 	"encoding/csv"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 )
 
+// Write writes a CSV file with the given file name and folder name, and the data from the responses.
 func Write(fileName string, folderName string, responses []models.ResponseBody) error {
+	// Create a slice to hold all the rows for the CSV file
 	var rows [][]string
 
+	// Add the headers to the slice
 	rows = append(rows, generateHeaders())
 
+	// Add the data rows to the slice
 	for _, response := range responses {
 		rows = append(rows, generateRow(response)...)
 	}
 
+	// Create the CSV file
 	cf, err := createFile(folderName + "/" + fileName + ".csv")
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
+	// Close the file when the function completes
 	defer cf.Close()
 
+	// Create a new CSV writer
 	w := csv.NewWriter(cf)
 
+	// Write all the rows to the CSV file
 	err = w.WriteAll(rows)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -37,6 +48,7 @@ func Write(fileName string, folderName string, responses []models.ResponseBody) 
 //createFile function takes in a file path and creates a file in the specified directory. It returns a pointer to the created file and an error if there is any.
 func createFile(p string) (*os.File, error) {
 	if err := os.MkdirAll(filepath.Dir(p), 0770); err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return os.Create(p)
