@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	LINK    = "https://op.digesto.com.br/api/background_check/advanced_search_all?api_key="
+	API     = "/api/background_check/advanced_search_all"
+	BASE    = "https://op.digesto.com.br"
 	METHOD  = "POST"
 	WORKERS = 2
 )
@@ -27,6 +28,8 @@ const (
 )
 
 func main() {
+	var urlCaller = BASE + API + "?api_key="
+
 	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {
@@ -44,8 +47,7 @@ func main() {
 	// Make API requests asynchronously
 	start := time.Now()
 	log.Println("Starting API calls...")
-	url := LINK + auth
-	results, err := request.AsyncAPIRequest(requests, WORKERS, url, METHOD, auth)
+	results, err := request.AsyncAPIRequest(requests, WORKERS, urlCaller, METHOD, auth)
 	if err != nil {
 		log.Fatal("Error making API requests: ", err)
 	}
