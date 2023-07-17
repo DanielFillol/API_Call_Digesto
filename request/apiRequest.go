@@ -13,18 +13,16 @@ import (
 	"time"
 )
 
-const JSONPAGESIZE = 500
+const JSONPAGESIZE = 10
 
 // APIRequest makes an API request to the specified URL using the specified HTTP method and authentication header.
 // It returns a models.ResponseBody struct containing the API response body and an error (if any).
 func APIRequest(url, method string, auth string, request models.ReadCsv) (models.ResponseBody, error) {
-
 	// Create a new BodyRequest struct with the document ID and pagination settings for the initial API call.
 	req := models.BodyRequest{
 		Document: request.Document,
 		Pages: models.Pagination{
-			Size:   JSONPAGESIZE,
-			Cursor: "",
+			Size: JSONPAGESIZE,
 		},
 	}
 
@@ -94,7 +92,7 @@ func callNextPage(url string, method string, auth string, req string, cursor str
 		request := models.BodyRequest{
 			Document: req,
 			Pages: models.Pagination{
-				Size:   500,
+				Size:   JSONPAGESIZE,
 				Cursor: cursor,
 			},
 		}
@@ -112,7 +110,7 @@ func callNextPage(url string, method string, auth string, req string, cursor str
 		res, err := call(url, method, auth, reqBody)
 		if err != nil {
 			log.Println(err)
-			return nil, errors.New(err.Error() + "  " + request.Document)
+			return nil, errors.New(err.Error() + "  " + request.Document + "  " + request.Pages.Cursor)
 		}
 
 		// Read the response body.
@@ -152,7 +150,7 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 	client := &http.Client{Timeout: time.Second * 10}
 
 	// Create a new HTTP request with the specified method, URL, and request body.
-	req, err := http.NewRequest(method, url, body)
+	req, err := http.NewRequest(method, url+AUTH, body)
 	if err != nil {
 		log.Println(err)
 		return nil, err

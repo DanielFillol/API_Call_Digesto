@@ -13,7 +13,7 @@ const (
 	API     = "/api/background_check/advanced_search_all"
 	BASE    = "https://op.digesto.com.br"
 	METHOD  = "POST"
-	WORKERS = 2
+	WORKERS = 1
 )
 
 const (
@@ -47,9 +47,10 @@ func main() {
 	// Make API requests asynchronously
 	start := time.Now()
 	log.Println("Starting API calls...")
+
 	results, err := request.AsyncAPIRequest(requests, WORKERS, urlCaller, METHOD, auth)
 	if err != nil {
-		log.Fatal("Error making API requests: ", err)
+		log.Println("Error making API requests: ", err)
 	}
 	log.Println("Finished API calls in ", time.Since(start))
 
