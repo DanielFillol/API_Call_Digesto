@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const JSONPAGESIZE = 10
+const JSONPAGESIZE = 500
 
 // APIRequest makes an API request to the specified URL using the specified HTTP method and authentication header.
 // It returns a models.ResponseBody struct containing the API response body and an error (if any).
@@ -62,7 +62,8 @@ func APIRequest(url, method string, auth string, request models.ReadCsv) (models
 	if response.Pagination.HasNextPage {
 		lawsuits, err := callNextPage(url, method, auth, request.Document, response.Pagination.EndCursor)
 		if err != nil {
-			return models.ResponseBody{}, err
+			log.Println(err)
+			//return models.ResponseBody{}, err
 		}
 
 		response.Lawsuits = append(response.Lawsuits, lawsuits...)
@@ -73,7 +74,6 @@ func APIRequest(url, method string, auth string, request models.ReadCsv) (models
 			Pagination:     response.Pagination,
 			Lawsuits:       response.Lawsuits,
 		}, nil
-
 	}
 
 	return models.ResponseBody{
@@ -88,6 +88,9 @@ func APIRequest(url, method string, auth string, request models.ReadCsv) (models
 func callNextPage(url string, method string, auth string, req string, cursor string) ([]models.Lawsuit, error) {
 	var lawsuits []models.Lawsuit
 	for {
+		// The API often can't handle to many next-page requests
+		time.Sleep(100 * time.Millisecond)
+
 		// Create a new BodyRequest struct with the document ID and updated pagination settings for the next API call.
 		request := models.BodyRequest{
 			Document: req,
@@ -100,7 +103,7 @@ func callNextPage(url string, method string, auth string, req string, cursor str
 		jsonReq, err := json.Marshal(request)
 		if err != nil {
 			log.Println(err)
-			return nil, err
+			return lawsuits, err
 		}
 
 		// Create a new buffer with the JSON-encoded request body.
@@ -110,14 +113,14 @@ func callNextPage(url string, method string, auth string, req string, cursor str
 		res, err := call(url, method, auth, reqBody)
 		if err != nil {
 			log.Println(err)
-			return nil, errors.New(err.Error() + "  " + request.Document + "  " + request.Pages.Cursor)
+			return lawsuits, errors.New(err.Error() + "  " + request.Document + "  " + request.Pages.Cursor)
 		}
 
 		// Read the response body.
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			log.Println(err)
-			return nil, err
+			return lawsuits, err
 		}
 
 		// Unmarshal the response body into a models.ResponseBody struct.
@@ -125,7 +128,7 @@ func callNextPage(url string, method string, auth string, req string, cursor str
 		err = json.Unmarshal(body, &response)
 		if err != nil {
 			log.Println(err)
-			return nil, err
+			return lawsuits, err
 		}
 
 		// Append the current response to the lawsuits slice.
@@ -169,6 +172,7 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 
 	// If the response status code is not OK, return an error with the status code.
 	if response.StatusCode != http.StatusOK {
+		log.Println(strconv.Itoa(response.StatusCode))
 		return nil, errors.New(strconv.Itoa(response.StatusCode))
 	}
 
