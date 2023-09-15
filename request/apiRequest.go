@@ -161,7 +161,7 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 
 	// Set the Content-Type and Authorization headers for the request.
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", AUTH)
+	req.Header.Set("apikey", AUTH)
 
 	// Send the request and get the response.
 	response, err := client.Do(req)

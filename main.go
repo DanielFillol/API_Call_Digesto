@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	API     = "/api/background_check/advanced_search_all"
-	BASE    = "https://op.digesto.com.br"
+	API     = "/lawsuits/criminal"
+	BASE    = "https://api.consulta-pro.jusbrasil.com.br"
 	METHOD  = "POST"
 	WORKERS = 1
 )
