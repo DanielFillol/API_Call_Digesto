@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	API     = "/lawsuits/criminal"
+	API     = "/lawsuits/all"
 	BASE    = "https://api.consulta-pro.jusbrasil.com.br"
 	METHOD  = "POST"
 	WORKERS = 1
