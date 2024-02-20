@@ -161,6 +161,38 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 
 	// Set the Content-Type and Authorization headers for the request.
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", AUTH)
+
+	// Send the request and get the response.
+	response, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	// If the response status code is not OK, return an error with the status code.
+	if response.StatusCode != http.StatusOK {
+		log.Println(url + AUTH)
+		log.Println(strconv.Itoa(response.StatusCode))
+		return nil, errors.New(strconv.Itoa(response.StatusCode))
+	}
+
+	return response, nil
+}
+
+func callOther(url, method string, AUTH string, body io.Reader) (*http.Response, error) {
+	// Create an HTTP client with a 10-second timeout.
+	client := &http.Client{Timeout: time.Second * 10}
+
+	// Create a new HTTP request with the specified method, URL, and request body.
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	// Set the Content-Type and Authorization headers for the request.
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("apikey", AUTH)
 
 	// Send the request and get the response.
@@ -172,9 +204,56 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 
 	// If the response status code is not OK, return an error with the status code.
 	if response.StatusCode != http.StatusOK {
+		log.Println(url + AUTH)
 		log.Println(strconv.Itoa(response.StatusCode))
 		return nil, errors.New(strconv.Itoa(response.StatusCode))
 	}
 
 	return response, nil
+}
+
+func APIRequestOther(url, method string, auth string, request models.ReadCsv) (models.ResponseBodyOtherRecords, error) {
+	// Create a new BodyRequest struct with the document ID and pagination settings for the initial API call.
+	req := models.BodyRequest{
+		Document: request.Document,
+	}
+
+	// Serialize the BodyRequest struct to JSON.
+	jsonReq, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, err
+	}
+
+	// Create a new buffer with the JSON-encoded request body.
+	reqBody := bytes.NewBuffer(jsonReq)
+
+	// Make the API call and get the response.
+	res, err := callOther(url, method, auth, reqBody)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, errors.New(err.Error() + "  " + req.Document)
+	}
+
+	// Read the response body.
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, err
+	}
+
+	// Unmarshal the response body into a ResponseBody struct.
+	var response models.ResponseBodyOtherRecords
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, err
+	}
+
+	return models.ResponseBodyOtherRecords{
+		Identification: response.Identification,
+		Name:           response.Name,
+		MP:             response.MP,
+		BNMP:           response.BNMP,
+	}, nil
 }
