@@ -9,8 +9,8 @@ import (
 	"strconv"
 )
 
-// Write writes a CSV file with the given file name and folder name, and the data from the responses.
-func Write(fileName string, folderName string, responses []models.ResponseBody) error {
+// WriteLawsuits writes a CSV file with the given file name and folder name, and the data from the responses.
+func WriteLawsuits(fileName string, folderName string, responses []models.ResponseBody) error {
 	// Create a slice to hold all the rows for the CSV file
 	var rows [][]string
 
@@ -35,7 +35,7 @@ func Write(fileName string, folderName string, responses []models.ResponseBody) 
 	// Create a new CSV writer
 	w := csv.NewWriter(cf)
 
-	// Write all the rows to the CSV file
+	// WriteLawsuits all the rows to the CSV file
 	err = w.WriteAll(rows)
 	if err != nil {
 		log.Println(err)
