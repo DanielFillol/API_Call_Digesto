@@ -19,7 +19,6 @@ const (
 )
 
 func main() {
-	// Set Logger
 	// Set log file
 	logFile, err := os.Create("output.log.txt")
 	if err != nil {
