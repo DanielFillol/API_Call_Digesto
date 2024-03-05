@@ -92,15 +92,15 @@ func MergeAndDeleteCSVs(folderPath string, mergedFilename string) error {
 		}
 	}
 
-	// Remove individual CSV files
-	for _, file := range files {
-		if file == mergedFilename {
-			continue // Skip the merged file itself
-		}
-		if err := os.Remove(file); err != nil {
-			log.Printf("Error deleting file %s: %v", file, err)
-		}
-	}
+	//// Remove individual CSV files
+	//for _, file := range files {
+	//	if file == mergedFilename {
+	//		continue // Skip the merged file itself
+	//	}
+	//	if err := os.Remove(file); err != nil {
+	//		log.Printf("Error deleting file %s: %v", file, err)
+	//	}
+	//}
 
 	log.Printf("Merged CSV file created: %s", mergedFilename)
 
