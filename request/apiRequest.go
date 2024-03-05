@@ -17,7 +17,10 @@ const JSONPAGESIZE = 500
 
 // APIRequest makes an API request to the specified URL using the specified HTTP method and authentication header.
 // It returns a models.ResponseBody struct containing the API response body and an error (if any).
-func APIRequest(url, method string, auth string, request models.ReadCsv) (models.ResponseBody, error) {
+func APIRequest(url, method string, auth string, request models.ReadCsv, duration time.Duration) (models.ResponseBody, error) {
+	// Set a coll down for every request
+	time.Sleep(duration)
+
 	// Create a new BodyRequest struct with the document ID and pagination settings for the initial API call.
 	req := models.BodyRequest{
 		Document: request.Document,
@@ -153,7 +156,7 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 	client := &http.Client{Timeout: time.Second * 10}
 
 	// Create a new HTTP request with the specified method, URL, and request body.
-	req, err := http.NewRequest(method, url+AUTH, body)
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -161,7 +164,7 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 
 	// Set the Content-Type and Authorization headers for the request.
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", AUTH)
+	req.Header.Set("apikey", AUTH)
 
 	// Send the request and get the response.
 	response, err := client.Do(req)
@@ -172,10 +175,58 @@ func call(url, method string, AUTH string, body io.Reader) (*http.Response, erro
 
 	// If the response status code is not OK, return an error with the status code.
 	if response.StatusCode != http.StatusOK {
-		log.Println(url + AUTH)
-		log.Println(strconv.Itoa(response.StatusCode))
-		return nil, errors.New(strconv.Itoa(response.StatusCode))
+		log.Println(url)
+		log.Println(strconv.Itoa(response.StatusCode), req.Body)
 	}
 
 	return response, nil
+}
+
+func APIRequestOther(url, method string, auth string, request models.ReadCsv, duration time.Duration) (models.ResponseBodyOtherRecords, error) {
+	// Set a coll down for every request
+	time.Sleep(duration)
+
+	// Create a new BodyRequest struct with the document ID and pagination settings for the initial API call.
+	req := models.BodyRequest{
+		Document: request.Document,
+	}
+
+	// Serialize the BodyRequest struct to JSON.
+	jsonReq, err := json.Marshal(req)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, err
+	}
+
+	// Create a new buffer with the JSON-encoded request body.
+	reqBody := bytes.NewBuffer(jsonReq)
+
+	// Make the API call and get the response.
+	res, err := call(url, method, auth, reqBody)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, errors.New(err.Error() + "  " + req.Document)
+	}
+
+	// Read the response body.
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, err
+	}
+
+	// Unmarshal the response body into a ResponseBody struct.
+	var response models.ResponseBodyOtherRecords
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		log.Println(err)
+		return models.ResponseBodyOtherRecords{}, err
+	}
+
+	return models.ResponseBodyOtherRecords{
+		Identification: response.Identification,
+		Name:           response.Name,
+		MP:             response.MP,
+		BNMP:           response.BNMP,
+	}, nil
 }
