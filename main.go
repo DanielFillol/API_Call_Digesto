@@ -6,26 +6,25 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
 const (
-	APIBNMP = "https://api-dev.consulta-pro.jusbrasil.com.br/other-records"
-	API     = "/api/background_check/advanced_search_all"
-	BASE    = "https://op.digesto.com.br"
-	METHOD  = "POST"
-	WORKERS = 1
+	API           = "/api/background_check/advanced_search_all"
+	BASE          = "https://op.digesto.com.br"
+	METHOD        = "POST"
+	WORKERS       = 1
+	BATCHSize     = 10000
+	BATCHInterval = 5 * time.Second
 )
 
 const (
 	FILEPATH      = "data/requests.csv"
 	FILESEPARATOR = ','
 	SKIPHEADER    = true
-)
-
-const (
-	FILENAME = "response_Criminal_and_Civil"
-	FOLDER   = "data"
+	FILENAME      = "response_Criminal_and_Civil"
+	FOLDER        = "data/response"
 )
 
 func main() {
@@ -49,34 +48,44 @@ func main() {
 	start := time.Now()
 	log.Println("Starting API calls...")
 
-	results, err := request.AsyncAPIRequest(requests, WORKERS, urlCaller, METHOD, auth)
-	if err != nil {
-		log.Println("Error making API requests: ", err)
+	// Process requests in batches
+	var resultsSaved int
+	for i := 0; i < len(requests); i += BATCHSize {
+		end := i + BATCHSize
+		if end > len(requests) {
+			end = len(requests)
+		}
+
+		batchRequests := requests[i:end]
+
+		// Make API requests asynchronously
+		start := time.Now()
+		log.Printf("Starting API calls for batch %d...", i/BATCHSize)
+
+		batchResults, err := request.AsyncAPIRequest(batchRequests, WORKERS, urlCaller, METHOD, auth)
+		if err != nil {
+			log.Printf("Error making API requests for batch %d: %v", i/BATCHSize, err)
+			continue
+		}
+
+		log.Printf("Finished API calls for batch %d in %v", i/BATCHSize, time.Since(start))
+
+		// Write API response to CSV file
+		err = csv.Write(FILENAME+"_"+strconv.Itoa(i/BATCHSize), FOLDER, batchResults)
+		if err != nil {
+			log.Printf("Error writing API response to CSV for batch %d: %v", i/BATCHSize, err)
+			continue
+		}
+
+		resultsSaved += len(batchResults)
+		// Introduce a 5-second interval between batches
+		time.Sleep(BATCHInterval)
 	}
 
-	log.Println("Finished API_Criminal calls in ", time.Since(start))
+	log.Println("All API calls completed in " + time.Since(start).String())
 
-	// Write API response to CSV file
-	err = csv.Write(FILENAME, FOLDER, results)
+	err = csv.MergeAndDeleteCSVs(FOLDER)
 	if err != nil {
-		log.Fatal("Error writing API response to CSV: ", err)
+		log.Println("Error merging csv: ", err)
 	}
-
-	//Starts Other endpoint request
-	urlCaller = APIBNMP
-	auth = os.Getenv("AUTH2")
-
-	results2, err := request.AsyncAPIRequestBNMP(requests, WORKERS, urlCaller, METHOD, auth)
-	if err != nil {
-		log.Println("Error making API requests: ", err)
-	}
-
-	// Write API response to CSV file
-	err = csv.WriteOthers(FOLDER, results2)
-	if err != nil {
-		log.Fatal("Error writing API response to CSV: ", err)
-	}
-
-	log.Println("Finished API_Others calls in ", time.Since(start))
-
 }
