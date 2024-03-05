@@ -4,88 +4,55 @@ import (
 	"CallDigesto/csv"
 	"CallDigesto/request"
 	"github.com/joho/godotenv"
+	"io"
 	"log"
 	"os"
-	"strconv"
 	"time"
 )
 
 const (
-	API           = "/api/background_check/advanced_search_all"
-	BASE          = "https://op.digesto.com.br"
-	METHOD        = "POST"
-	WORKERS       = 1
-	BATCHSize     = 10000
-	BATCHInterval = 5 * time.Second
-)
-
-const (
+	FILENAME      = "response"
 	FILEPATH      = "data/requests.csv"
-	FILESEPARATOR = ','
-	SKIPHEADER    = true
-	FILENAME      = "response_Criminal_and_Civil"
-	FOLDER        = "data/response"
+	FILESeparator = ','
+	SKIPHeader    = true
+	BATCHSize     = 10
 )
 
 func main() {
-	var urlCaller = BASE + API + "?api_key="
+	// Set Logger
+	// Set log file
+	logFile, err := os.Create("output.log.txt")
+	if err != nil {
+		log.Println("Failed to open log file: " + err.Error())
+	}
+	defer logFile.Close()
+
+	// Create a multi-writer that writes to both the file and os.Stdout (terminal)
+	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(multiWriter)
 
 	// Load environment variables from .env file
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file: ", err)
+		log.Println("Error loading .env file: ", err)
 	}
 	// Get the value of the AUTH variable from the environment
-	var auth = os.Getenv("AUTH")
+	var auth = os.Getenv("AUTH2")
 
 	// Load data to be requested from CSV file
-	requests, err := csv.Read(FILEPATH, FILESEPARATOR, SKIPHEADER)
+	requests, err := csv.Read(FILEPATH, FILESeparator, SKIPHeader)
 	if err != nil {
-		log.Fatal("Error loading requests from CSV: ", err)
+		log.Println("Error loading requests from CSV: ", err)
 	}
 
 	// Make API requests asynchronously
 	start := time.Now()
 	log.Println("Starting API calls...")
 
-	// Process requests in batches
-	var resultsSaved int
-	for i := 0; i < len(requests); i += BATCHSize {
-		end := i + BATCHSize
-		if end > len(requests) {
-			end = len(requests)
-		}
-
-		batchRequests := requests[i:end]
-
-		// Make API requests asynchronously
-		start := time.Now()
-		log.Printf("Starting API calls for batch %d...", i/BATCHSize)
-
-		batchResults, err := request.AsyncAPIRequest(batchRequests, WORKERS, urlCaller, METHOD, auth)
-		if err != nil {
-			log.Printf("Error making API requests for batch %d: %v", i/BATCHSize, err)
-			continue
-		}
-
-		log.Printf("Finished API calls for batch %d in %v", i/BATCHSize, time.Since(start))
-
-		// Write API response to CSV file
-		err = csv.Write(FILENAME+"_"+strconv.Itoa(i/BATCHSize), FOLDER, batchResults)
-		if err != nil {
-			log.Printf("Error writing API response to CSV for batch %d: %v", i/BATCHSize, err)
-			continue
-		}
-
-		resultsSaved += len(batchResults)
-		// Introduce a 5-second interval between batches
-		time.Sleep(BATCHInterval)
+	err = request.AllBatchAsync(requests, BATCHSize, auth, FILENAME)
+	if err != nil {
+		log.Println(err)
 	}
 
 	log.Println("All API calls completed in " + time.Since(start).String())
-
-	err = csv.MergeAndDeleteCSVs(FOLDER)
-	if err != nil {
-		log.Println("Error merging csv: ", err)
-	}
 }
