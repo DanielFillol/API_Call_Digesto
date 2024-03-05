@@ -8,9 +8,7 @@ import (
 	"path/filepath"
 )
 
-const MergedFilename = "merged_result.csv"
-
-func MergeAndDeleteCSVs(folderPath string) error {
+func MergeAndDeleteCSVs(folderPath string, mergedFilename string) error {
 	// List all CSV files in the specified folder
 	files, err := filepath.Glob(filepath.Join(folderPath, "*.csv"))
 	if err != nil {
@@ -18,12 +16,12 @@ func MergeAndDeleteCSVs(folderPath string) error {
 	}
 
 	if len(files) == 0 {
-		log.Println("No CSV files found in the specified folder.")
+		log.Println("No CSV files found in the specified folder. Folder: ", folderPath)
 		return nil
 	}
 
 	// Create or open the merged CSV file
-	mergedFile, err := os.Create(MergedFilename)
+	mergedFile, err := os.Create(mergedFilename)
 	if err != nil {
 		return err
 	}
@@ -33,7 +31,7 @@ func MergeAndDeleteCSVs(folderPath string) error {
 	mergedWriter := csv.NewWriter(mergedFile)
 	defer mergedWriter.Flush()
 
-	// Write headers from the first CSV file
+	// WriteLawsuits headers from the first CSV file
 	firstFile, err := os.Open(files[0])
 	if err != nil {
 		return err
@@ -49,7 +47,7 @@ func MergeAndDeleteCSVs(folderPath string) error {
 
 	// Iterate through each CSV file, skipping the header in subsequent files
 	for _, file := range files {
-		if file == MergedFilename {
+		if file == mergedFilename {
 			continue // Skip the merged file itself
 		}
 
@@ -64,7 +62,7 @@ func MergeAndDeleteCSVs(folderPath string) error {
 			return err
 		}
 
-		// Write the remaining rows to the merged file
+		// WriteLawsuits the remaining rows to the merged file
 		lineNumber := 2 // Start from line 2 (skipping header)
 		for {
 			row, err := currentReader.Read()
@@ -96,7 +94,7 @@ func MergeAndDeleteCSVs(folderPath string) error {
 
 	// Remove individual CSV files
 	for _, file := range files {
-		if file == MergedFilename {
+		if file == mergedFilename {
 			continue // Skip the merged file itself
 		}
 		if err := os.Remove(file); err != nil {
@@ -104,7 +102,7 @@ func MergeAndDeleteCSVs(folderPath string) error {
 		}
 	}
 
-	log.Printf("Merged CSV file created: %s", MergedFilename)
+	log.Printf("Merged CSV file created: %s", mergedFilename)
 
 	return nil
 }
