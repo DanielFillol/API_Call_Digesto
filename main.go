@@ -15,7 +15,7 @@ const (
 	FILEPATH      = "data/requests.csv"
 	FILESeparator = ','
 	SKIPHeader    = true
-	BATCHSize     = 10
+	BATCHSize     = 10000
 )
 
 func main() {
