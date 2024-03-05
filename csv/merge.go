@@ -2,7 +2,6 @@ package csv
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -71,9 +70,6 @@ func MergeAndDeleteCSVs(folderPath string) error {
 			row, err := currentReader.Read()
 			if err == io.EOF {
 				break
-			} else if err != nil {
-				fmt.Println(row)
-				//return err
 			}
 
 			// Check if the number of fields in the row matches the number of headers
