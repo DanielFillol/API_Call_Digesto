@@ -6,14 +6,15 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 const (
 	METHOD        = "POST"
-	WORKERS       = 1
-	BATCHInterval = 5 * time.Second
-	CollDown      = 1000 * time.Millisecond
+	WORKERS       = 10
+	BATCHInterval = 2 * time.Second
+	CollDown      = 3500 * time.Millisecond
 )
 const (
 	criminalCall           = "/lawsuits/criminal"
@@ -37,48 +38,48 @@ const (
 )
 
 func AllBatchAsync(requests []models.ReadCsv, batchSize int, auth string, fileName string) error {
-	//var wg sync.WaitGroup
-	//wg.Add(4)
+	var wg sync.WaitGroup
+	wg.Add(4)
 
-	//go func() {
-	//	defer wg.Done()
-	err := batchCall(requests, batchSize, criminalCall, auth, criminalFolderSingle, criminalFolderSingle, fileName, MergedFilenameCriminal)
-	if err != nil {
-		log.Print("Error on criminal caller: ", err)
-	}
-	//}()
+	go func() {
+		defer wg.Done()
+		err := batchCall(requests, batchSize, criminalCall, auth, criminalFolderSingle, criminalFolderSingle, fileName, MergedFilenameCriminal)
+		if err != nil {
+			log.Print("Error on criminal caller: ", err)
+		}
+	}()
 
-	//go func() {
-	//	defer wg.Done()
-	err = batchCall(requests, batchSize, civilCall, auth, civilFolderSingle, civilFolderSingle, fileName, MergedFilenameCivil)
-	if err != nil {
-		log.Print("Error on civil caller: ", err)
-	}
-	//}()
+	go func() {
+		//	defer wg.Done()
+		err := batchCall(requests, batchSize, civilCall, auth, civilFolderSingle, civilFolderSingle, fileName, MergedFilenameCivil)
+		if err != nil {
+			log.Print("Error on civil caller: ", err)
+		}
+	}()
 
-	//go func() {
-	//	defer wg.Done()
-	err = batchCallOthers(requests, batchSize, criminalOtherCall, auth, criminalOtherFolderSingle, criminalOtherFolderSingle, fileName, MergedFilenameOtherCriminal)
-	if err != nil {
-		log.Print("Error on criminal other caller: ", err)
-	}
-	//}()
+	go func() {
+		defer wg.Done()
+		err := batchCallOthers(requests, batchSize, criminalOtherCall, auth, criminalOtherFolderSingle, criminalOtherFolderSingle, fileName, MergedFilenameOtherCriminal)
+		if err != nil {
+			log.Print("Error on criminal other caller: ", err)
+		}
+	}()
 
-	//go func() {
-	//	defer wg.Done()
-	err = batchCallOthers(requests, batchSize, civilOtherCall, auth, civilOtherFolderSingle, civilOtherFolderSingle, fileName, MergedFilenameOtherCivil)
-	if err != nil {
-		log.Print("Error on civil other caller: ", err)
-	}
-	//}()
+	go func() {
+		defer wg.Done()
+		err := batchCallOthers(requests, batchSize, civilOtherCall, auth, civilOtherFolderSingle, civilOtherFolderSingle, fileName, MergedFilenameOtherCivil)
+		if err != nil {
+			log.Print("Error on civil other caller: ", err)
+		}
+	}()
 
-	//wg.Wait()
+	wg.Wait()
 
 	return nil
 }
 
 func batchCall(requests []models.ReadCsv, batchSize int, call string, auth string, folderMerge string, folderName string, fileName string, mergedFileName string) error {
-	var urlCaller = "https://api.consulta-pro.jusbrasil.com.br" + call
+	var urlCaller = "https://api-dev.consulta-pro.jusbrasil.com.br" + call
 
 	// Process requests in batches
 	var resultsSaved int
@@ -125,7 +126,7 @@ func batchCall(requests []models.ReadCsv, batchSize int, call string, auth strin
 }
 
 func batchCallOthers(requests []models.ReadCsv, BATCHSize int, call string, auth string, folderMerge string, folderName string, fileName string, mergedFileName string) error {
-	var urlCaller = "https://api.consulta-pro.jusbrasil.com.br" + call
+	var urlCaller = "https://api-dev.consulta-pro.jusbrasil.com.br" + call
 
 	// Process requests in batches
 	var resultsSaved int
