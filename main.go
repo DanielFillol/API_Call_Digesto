@@ -11,14 +11,25 @@ import (
 )
 
 const (
-	FILENAME      = "response"
-	FILEPATH      = "data/requests.csv"
-	FILESeparator = ','
-	SKIPHeader    = true
-	BATCHSize     = 10000
+	BATCHSize     = 1000                    // set batch size
+	BATCHInterval = 100 * time.Millisecond  // set the coll down for each batch
+	CollDown      = 1500 * time.Millisecond // set the coll down for each single request
+	WORKERS       = 15                      // set amount of parallel execution
+)
+
+const (
+	FILENAME      = "response"          // set single .csv response initial name
+	FILEPATH      = "data/requests.csv" // set the path were the requests are stored
+	FILESeparator = ','                 // set .csv separator
+	SKIPHeader    = true                // set if the .csv reader should skip the file header
 )
 
 func main() {
+	// Set request variables
+	request.WORKERS = WORKERS
+	request.BATCHInterval = BATCHInterval
+	request.CollDown = CollDown
+
 	// Set log file
 	logFile, err := os.Create("output.log.txt")
 	if err != nil {
