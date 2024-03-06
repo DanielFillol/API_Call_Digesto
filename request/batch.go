@@ -11,10 +11,7 @@ import (
 )
 
 const (
-	METHOD        = "POST"
-	WORKERS       = 10
-	BATCHInterval = 2 * time.Second
-	CollDown      = 3500 * time.Millisecond
+	METHOD = "POST"
 )
 const (
 	criminalCall           = "/lawsuits/criminal"
@@ -36,6 +33,10 @@ const (
 	civilOtherFolderSingle   = "data/response/other_records/civil"
 	MergedFilenameOtherCivil = "merged_result_other_civil.csv"
 )
+
+var WORKERS int
+var BATCHInterval time.Duration
+var CollDown time.Duration
 
 func AllBatchAsync(requests []models.ReadCsv, batchSize int, auth string, fileName string) error {
 	var wg sync.WaitGroup
