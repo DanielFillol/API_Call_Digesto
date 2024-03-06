@@ -28,6 +28,7 @@ func AsyncAPIRequest(users []models.ReadCsv, numberOfWorkers int, url string, me
 		go func() {
 			// Each worker goroutine consumes inputs from the shared input channel
 			for input := range inputCh {
+				time.Sleep(duration)
 				// Make the API request and send the response to the result channel
 				bodyStr, err := APIRequest(url, method, auth, input, duration)
 				resultCh <- bodyStr
