@@ -36,7 +36,7 @@ func AsyncAPIRequest(users []models.ReadCsv, numberOfWorkers int, url string, me
 					// If there is an error making the API request, print the error
 					log.Println(err)
 					errorOnApiRequests = err
-					break
+					continue
 				}
 			}
 			// When the worker goroutine is done processing inputs, signal the wait group
@@ -52,7 +52,11 @@ func AsyncAPIRequest(users []models.ReadCsv, numberOfWorkers int, url string, me
 
 	// Return early on error in any given call on API requests
 	if errorOnApiRequests != nil {
-		return nil, errorOnApiRequests
+		var results []models.ResponseBody
+		for result := range resultCh {
+			results = append(results, result)
+		}
+		return results, errorOnApiRequests
 	}
 
 	// Collect results from the result channel and return them as a slice
@@ -108,7 +112,7 @@ func AsyncAPIRequestOther(users []models.ReadCsv, numberOfWorkers int, url strin
 					// If there is an error making the API request, print the error
 					log.Println(err)
 					errorOnApiRequests = err
-					break
+					continue
 				}
 			}
 			// When the worker goroutine is done processing inputs, signal the wait group
@@ -124,7 +128,11 @@ func AsyncAPIRequestOther(users []models.ReadCsv, numberOfWorkers int, url strin
 
 	// Return early on error in any given call on API requests
 	if errorOnApiRequests != nil {
-		return nil, errorOnApiRequests
+		var results []models.ResponseBodyOtherRecords
+		for result := range resultCh {
+			results = append(results, result)
+		}
+		return results, errorOnApiRequests
 	}
 
 	// Collect results from the result channel and return them as a slice
