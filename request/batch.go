@@ -164,7 +164,12 @@ func batchCallOthers(requests []models.ReadCsv, BATCHSize int, call string, auth
 	}
 
 	if resultsSaved != 0 {
-		err := csv.MergeAndDeleteCSVs(folderMerge, mergedFileName)
+		err := csv.MergeAndDeleteCSVs(folderMerge+"/bnmp", mergedFileName)
+		if err != nil {
+			return err
+		}
+
+		err = csv.MergeAndDeleteCSVs(folderMerge+"/mp", mergedFileName)
 		if err != nil {
 			return err
 		}
