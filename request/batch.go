@@ -26,7 +26,7 @@ const (
 const (
 	criminalOtherCall           = "/other-records/criminal"
 	criminalOtherFolderSingle   = "data/response/other_records/criminal"
-	MergedFilenameOtherCriminal = "merged_result_criminal.csv"
+	MergedFilenameOtherCriminal = "merged_result_other_criminal.csv"
 )
 const (
 	civilOtherCall           = "/other-records/civel"
