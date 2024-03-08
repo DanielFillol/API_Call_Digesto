@@ -8,11 +8,11 @@ import (
 )
 
 func WriteOthers(complementFile string, folderName string, responses []models.ResponseBodyOtherRecords) error {
-	err := writeMP(complementFile, folderName, responses)
+	err := writeMP(complementFile, folderName+"/mp", responses)
 	if err != nil {
 		return err
 	}
-	err = writeBNMP(complementFile, folderName, responses)
+	err = writeBNMP(complementFile, folderName+"/bnmp", responses)
 	if err != nil {
 		return err
 	}
