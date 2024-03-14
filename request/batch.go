@@ -26,12 +26,12 @@ const (
 const (
 	criminalOtherCall           = "/other-records/criminal"
 	criminalOtherFolderSingle   = "data/response/other_records/criminal"
-	MergedFilenameOtherCriminal = "merged_result_other_criminal.csv"
+	MergedFilenameOtherCriminal = "merged_result_other_criminal"
 )
 const (
 	civilOtherCall           = "/other-records/civel"
 	civilOtherFolderSingle   = "data/response/other_records/civil"
-	MergedFilenameOtherCivil = "merged_result_other_civil.csv"
+	MergedFilenameOtherCivil = "merged_result_other_civil"
 )
 
 var WORKERS int
@@ -51,7 +51,7 @@ func AllBatchAsync(requests []models.ReadCsv, batchSize int, auth string, fileNa
 	}()
 
 	go func() {
-		//	defer wg.Done()
+		defer wg.Done()
 		err := batchCall(requests, batchSize, civilCall, auth, civilFolderSingle, civilFolderSingle, fileName, MergedFilenameCivil)
 		if err != nil {
 			log.Print("Error on civil caller: ", err)
@@ -164,12 +164,12 @@ func batchCallOthers(requests []models.ReadCsv, BATCHSize int, call string, auth
 	}
 
 	if resultsSaved != 0 {
-		err := csv.MergeAndDeleteCSVs(folderMerge+"/bnmp", mergedFileName)
+		err := csv.MergeAndDeleteCSVs(folderMerge+"/bnmp", mergedFileName+"_bnmp.csv")
 		if err != nil {
 			return err
 		}
 
-		err = csv.MergeAndDeleteCSVs(folderMerge+"/mp", mergedFileName)
+		err = csv.MergeAndDeleteCSVs(folderMerge+"/mp", mergedFileName+"_mp.csv")
 		if err != nil {
 			return err
 		}
