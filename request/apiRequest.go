@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -62,22 +63,22 @@ func APIRequest(url, method string, auth string, request models.ReadCsv, duratio
 	}
 
 	//If the API response has more pages of data, make additional API calls and append the results to the response.
-	//if response.Pagination.HasNextPage {
-	//	lawsuits, err := callNextPage(url, method, auth, request.Document, response.Pagination.EndCursor, req)
-	//	if err != nil {
-	//		log.Println(err)
-	//		//return models.ResponseBody{}, err
-	//	}
-	//
-	//	response.Lawsuits = append(response.Lawsuits, lawsuits...)
-	//
-	//	return models.ResponseBody{
-	//		Identification: response.Identification,
-	//		Name:           response.Name,
-	//		Pagination:     response.Pagination,
-	//		Lawsuits:       response.Lawsuits,
-	//	}, nil
-	//}
+	if response.Pagination.HasNextPage {
+		lawsuits, err := callNextPage(url, method, auth, request.Document, response.Pagination.EndCursor, req)
+		if err != nil {
+			log.Println(err)
+			//return models.ResponseBody{}, err
+		}
+
+		response.Lawsuits = append(response.Lawsuits, lawsuits...)
+
+		return models.ResponseBody{
+			Identification: response.Identification,
+			Name:           response.Name,
+			Pagination:     response.Pagination,
+			Lawsuits:       response.Lawsuits,
+		}, nil
+	}
 
 	return models.ResponseBody{
 		Identification: response.Identification,
@@ -175,9 +176,9 @@ func call(url, method string, AUTH string, body io.Reader, request models.BodyRe
 
 	// If the response status code is not OK, return an error with the status code.
 	if response.StatusCode != http.StatusOK {
-		log.Println("Error: Not http 200!", strconv.Itoa(response.StatusCode), "document:", request.Document, "url:", url, "request:", request)
+		log.Println("status", "ERROR", "HTTP:", strconv.Itoa(response.StatusCode), "document:", request.Document, "url:", strings.ReplaceAll(url, "https://api-dev.consulta-pro.jusbrasil.com.br/", ""), "request:", request)
 	} else {
-		log.Println("OK http 200", strconv.Itoa(response.StatusCode), "document:", request.Document, "url:", url)
+		log.Println("status:", "OK", "HTTP:", strconv.Itoa(response.StatusCode), "document:", request.Document, "url:", strings.ReplaceAll(url, "https://api-dev.consulta-pro.jusbrasil.com.br/", ""))
 	}
 
 	return response, nil
