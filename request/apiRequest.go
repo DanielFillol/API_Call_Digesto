@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const JSONPAGESIZE = 50
+const JSONPAGESIZE = 500
 
 // APIRequest makes an API request to the specified URL using the specified HTTP method and authentication header.
 // It returns a models.ResponseBody struct containing the API response body and an error (if any).

@@ -34,13 +34,14 @@ const (
 	MergedFilenameOtherCivil = "merged_result_other_civil"
 )
 
+var BASEURL string
 var WORKERS int
 var BATCHInterval time.Duration
 var CollDown time.Duration
 
 func AllBatchAsync(requests []models.ReadCsv, batchSize int, auth string, fileName string) error {
 	var wg sync.WaitGroup
-	wg.Add(4)
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
@@ -58,21 +59,21 @@ func AllBatchAsync(requests []models.ReadCsv, batchSize int, auth string, fileNa
 		}
 	}()
 
-	go func() {
-		defer wg.Done()
-		err := batchCallOthers(requests, batchSize, criminalOtherCall, auth, criminalOtherFolderSingle, criminalOtherFolderSingle, fileName, MergedFilenameOtherCriminal)
-		if err != nil {
-			log.Print("Error on criminal other caller: ", err)
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		err := batchCallOthers(requests, batchSize, civilOtherCall, auth, civilOtherFolderSingle, civilOtherFolderSingle, fileName, MergedFilenameOtherCivil)
-		if err != nil {
-			log.Print("Error on civil other caller: ", err)
-		}
-	}()
+	//go func() {
+	//	defer wg.Done()
+	//	err := batchCallOthers(requests, batchSize, criminalOtherCall, auth, criminalOtherFolderSingle, criminalOtherFolderSingle, fileName, MergedFilenameOtherCriminal)
+	//	if err != nil {
+	//		log.Print("Error on criminal other caller: ", err)
+	//	}
+	//}()
+	//
+	//go func() {
+	//	defer wg.Done()
+	//	err := batchCallOthers(requests, batchSize, civilOtherCall, auth, civilOtherFolderSingle, civilOtherFolderSingle, fileName, MergedFilenameOtherCivil)
+	//	if err != nil {
+	//		log.Print("Error on civil other caller: ", err)
+	//	}
+	//}()
 
 	wg.Wait()
 
@@ -80,7 +81,7 @@ func AllBatchAsync(requests []models.ReadCsv, batchSize int, auth string, fileNa
 }
 
 func batchCall(requests []models.ReadCsv, batchSize int, call string, auth string, folderMerge string, folderName string, fileName string, mergedFileName string) error {
-	var urlCaller = "https://api-dev.consulta-pro.jusbrasil.com.br" + call
+	var urlCaller = BASEURL + call
 
 	// Process requests in batches
 	var resultsSaved int

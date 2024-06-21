@@ -10,11 +10,13 @@ import (
 	"time"
 )
 
+const BASEURL = "https://api.consulta-pro.jusbrasil.com.br"
+
 const (
-	BATCHSize     = 1000                    // set batch size
-	BATCHInterval = 100 * time.Millisecond  // set the coll down for each batch
-	CollDown      = 1500 * time.Millisecond // set the coll down for each single request
-	WORKERS       = 15                      // set amount of parallel execution
+	BATCHSize     = 1000                   // set batch size
+	BATCHInterval = 100 * time.Millisecond // set the coll down for each batch
+	CollDown      = 500 * time.Millisecond // set the coll down for each single request
+	WORKERS       = 5                      // set amount of parallel execution
 )
 
 const (
@@ -26,6 +28,7 @@ const (
 
 func main() {
 	// Set request variables
+	request.BASEURL = BASEURL
 	request.WORKERS = WORKERS
 	request.BATCHInterval = BATCHInterval
 	request.CollDown = CollDown
