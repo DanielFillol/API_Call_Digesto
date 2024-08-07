@@ -164,6 +164,7 @@ func call(url, method string, AUTH string, body io.Reader, request models.BodyRe
 	}
 
 	// Set the Content-Type and Authorization headers for the request.
+	req.Header.Add("User-Agent", "cpro-fillol-analytics")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("apikey", AUTH)
 
